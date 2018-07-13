@@ -22,10 +22,11 @@ class RegexLexer:
         "CARET", "DASH", "DOLLAR",
         "LBRACE", "RBRACE", "COMMA",
         "BACKSLASH",
+        "COLON",
     )
 
     def t_NON_META_CHAR(self, t):
-        r"[a-zA-Z :/'!]"
+        r"[a-zA-Z /'!]"
         return t
     def t_DIGIT(self, t):
         r"[0-9]"
@@ -37,6 +38,7 @@ class RegexLexer:
     t_CARET, t_DASH, t_DOLLAR = r"\^", r"-", r"\$"
     t_LBRACE, t_RBRACE, t_COMMA = r"\{", r"\}", r","
     t_BACKSLASH = r"\\"
+    t_COLON = r"\:"
 
     def t_error(self, t):
         print ("Lexer error at '%s'" % t.value[0])
@@ -79,6 +81,7 @@ class RegexParser:
                | DIGIT
                | DASH
                | COMMA
+               | COLON
         """
         p[0] = (CHAR, p[1])
     def p_factor_dot(self, p):
@@ -93,6 +96,10 @@ class RegexParser:
     def p_factor_question(self, p):
         """factor : factor QUESTION"""
         p[0] = (BAR, p[1], (EMPTY,))
+    def p_factor_non_capturing_group(self, p):
+        """factor : LPAREN QUESTION COLON regex RPAREN"""
+        self.groups.append(p[4])
+        p[0] = (GROUP, len(self.groups), p[4])
     def p_factor_group(self, p):
         """factor : LPAREN regex RPAREN"""
         self.groups.append(p[2])
@@ -220,6 +227,7 @@ class RegexParser:
                           | LBRACE
                           | RBRACE
                           | COMMA
+                          | COLON
         """
         p[0] = p[1]
 
